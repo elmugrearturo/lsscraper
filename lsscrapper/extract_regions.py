@@ -85,15 +85,17 @@ def extract_ls_region_candidates(img,
     
         # approximation has four points, so it is a box
         if len(approximation) == 4:
-            # select contours with a face
-            for face_index, face_center in enumerate(face_centers):
-                rect_from_polygon = cv2.boundingRect(approximation)
-                x, y, w, h = rect_from_polygon
-                if x < face_center[0] < x+w:
-                    if y < face_center[1] < y+h:
-                        selected_contours.append((face_index, rect_from_polygon))
+            rect_from_polygon = cv2.boundingRect(approximation)
+            x, y, w, h = rect_from_polygon
+            # height must be greater than width
+            if h > w:
+                # select only contours with a face
+                for face_index, face_center in enumerate(face_centers):
+                    if x < face_center[0] < x+w:
+                        if y < face_center[1] < y+h:
+                            selected_contours.append((face_index, rect_from_polygon))
     
-    # Only one area per face
+    # Only one contour per face
     face_to_regions = {}
     for face_index, region in selected_contours:
         _, _, w, h = face_to_regions.get(face_index, (0, 0, 0, 0))
@@ -101,6 +103,7 @@ def extract_ls_region_candidates(img,
 
         _, _, w, h = region
         new_area = w * h
+        # Keep the largest area
         if saved_area < new_area:
             face_to_regions[face_index] = region
     return face_to_regions.values()
